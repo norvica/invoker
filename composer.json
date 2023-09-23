@@ -2,7 +2,10 @@
     "name": "norvica/invoker",
     "description": "Invoke PHP callables with configurable parameter resolving.",
     "type": "library",
-    "license": "MIT",
+    "license": "BSD-3-Clause",
+    "keywords": [
+        "callable", "resolver", "invoker"
+    ],
     "authors": [
         {
             "name": "Siarhei Kvashnin",
