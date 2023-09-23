@@ -1,5 +1,7 @@
 # Invoker
 
+[![Checks](https://github.com/norvica/invoker/actions/workflows/checks.yml/badge.svg)](https://github.com/norvica/invoker/actions/workflows/checks.yml)
+
 **Invoker** is a lightweight PHP library that simplifies invoking functions or methods with named parameters.
 It's designed to flexibly resolve missing parameters, utilizing a custom resolver mechanism to provide needed arguments
 dynamically.
