@@ -1,0 +1,35 @@
+{
+    "name": "norvica/invoker",
+    "description": "Invoke PHP callables with configurable parameter resolving.",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Siarhei Kvashnin",
+            "email": "75180587+serge-kvashnin@users.noreply.github.com"
+        }
+    ],
+    "autoload": {
+        "files": [
+            "src/functions.php"
+        ],
+        "psr-4": {
+            "Norvica\\Invoker\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "files": [
+            "tests/Fixtures/functions.php"
+        ],
+        "psr-4": {
+            "Tests\\Norvica\\Invoker\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable",
+    "require": {
+        "php": "^8.2"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.3"
+    }
+}
