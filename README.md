@@ -216,3 +216,8 @@ is [Symfony's Action Argument Resolving](https://symfony.com/doc/current/control
 allows you to transform the incoming request or any other data into arguments passed into your controller methods. While
 it's more tightly integrated with the Symfony ecosystem, it offers a wide array of built-in resolvers and the ability to
 create custom ones.
+
+### PHP-DI Invoker
+
+Another mature project with very similar idea is [PHP-DI Invoker](https://github.com/PHP-DI/Invoker). Feel free to check
+the project's [README](https://github.com/PHP-DI/Invoker#usage).
