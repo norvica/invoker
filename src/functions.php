@@ -15,11 +15,13 @@ namespace Norvica\Invoker;
 
 use Closure;
 use Norvica\Invoker\Exception\InvalidCallableException;
+use Norvica\Invoker\Exception\NonInstantiatableClass;
 use Norvica\Invoker\Exception\UnresolvedParameterException;
+use ReflectionClass;
 use ReflectionException;
 use ReflectionFunction;
 use ReflectionMethod;
-use TypeError;
+use ReflectionParameter;
 
 if (!function_exists('Norvica\Invoker\call')) {
     /**
@@ -27,8 +29,21 @@ if (!function_exists('Norvica\Invoker\call')) {
      */
     function call(callable|array|string $callable, array $arguments, ?Resolver $resolver = null): mixed
     {
-        $reflection = reflection($callable);
-        $parameters = $reflection->getParameters();
+        [$parameters, $callable] = prepare($callable, $resolver);
+        $canonical = resolve($parameters, $arguments, $resolver);
+
+        return call_user_func_array($callable, $canonical);
+    }
+}
+
+if (!function_exists('Norvica\Invoker\resolve')) {
+    /**
+     * @internal
+     *
+     * @param ReflectionParameter[] $parameters
+     * @param array<string, mixed> $arguments
+     */
+    function resolve(array $parameters, array $arguments = [], ?Resolver $resolver = null): array {
         $canonical = [];
 
         foreach ($parameters as $parameter) {
@@ -50,20 +65,34 @@ if (!function_exists('Norvica\Invoker\call')) {
             }
         }
 
-        return call_user_func_array($callable, $canonical);
+        return $canonical;
     }
 }
 
-if (!function_exists('Norvica\Invoker\reflection')) {
+if (!function_exists('Norvica\Invoker\prepare')) {
     /**
      * @internal
+     *
+     * @return array{0: ReflectionParameter[], 1: Closure}
      * @throws ReflectionException
      */
-    function reflection(callable|array|string $callable): ReflectionMethod|ReflectionFunction
+    function prepare(callable|array|string $callable, ?Resolver $resolver = null): array
     {
         if (is_string($callable)) {
             if (function_exists($callable)) {
-                return new ReflectionFunction($callable);
+                return [
+                    (new ReflectionFunction($callable))->getParameters(),
+                    $callable(...),
+                ];
+            }
+
+            if (class_exists($callable)) {
+                $instance = instantiate($callable, [], $resolver);
+
+                return [
+                    (new ReflectionMethod($callable, '__invoke'))->getParameters(),
+                    [$instance, '__invoke'](...)
+                ];
             }
 
             $callable = match(true) {
@@ -74,15 +103,57 @@ if (!function_exists('Norvica\Invoker\reflection')) {
 
         if (is_array($callable)) {
             // object method or class method
-            return new ReflectionMethod($callable[0], $callable[1]);
+            $method = new ReflectionMethod($callable[0], $callable[1]);
+            if ($method->isStatic()) {
+                return [
+                    $method->getParameters(),
+                    $callable(...),
+                ];
+            }
+
+            $instance = is_string($callable[0])
+                ? instantiate($callable[0], [], $resolver)
+                : $callable[0];
+
+            return [
+                $method->getParameters(),
+                [$instance, $callable[1]](...),
+            ];
         }
 
         if (is_object($callable) && !$callable instanceof Closure) {
             // object's __invoke method
-            return new ReflectionMethod($callable, '__invoke');
+            return [
+                (new ReflectionMethod($callable, '__invoke'))->getParameters(),
+                [$callable, '__invoke'](...)
+            ];
         }
 
         // standalone function or closure
-        return new ReflectionFunction($callable);
+        return [
+            (new ReflectionFunction($callable))->getParameters(),
+            $callable,
+        ];
+    }
+}
+
+if (!function_exists('Norvica\Invoker\instantiate')) {
+    /**
+     * @throws ReflectionException
+     */
+    function instantiate(string $class, array $arguments = [], ?Resolver $resolver = null): object {
+        $reflection = new ReflectionClass($class);
+        if (!$reflection->hasMethod('__construct')) {
+            return new $class();
+        }
+
+        $constructor = $reflection->getMethod('__construct');
+        if (!$constructor->isPublic()) {
+            throw new NonInstantiatableClass("Constructor of a class '{$class}' is not public, therefore class cannot be instantiated.");
+        }
+
+        $parameters = resolve($constructor->getParameters(), $arguments, $resolver);
+
+        return $reflection->newInstanceArgs($parameters);
     }
 }

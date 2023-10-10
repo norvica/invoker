@@ -19,6 +19,11 @@ use stdClass;
 
 final class ClassWithPublicMethod
 {
+    public function __construct(
+        public readonly string $foo = 'bar',
+    ) {
+    }
+
     public function bar(
         Closure $assertion,
         bool $boolean,

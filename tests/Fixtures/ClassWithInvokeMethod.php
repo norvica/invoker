@@ -19,6 +19,11 @@ use stdClass;
 
 final class ClassWithInvokeMethod
 {
+    public function __construct(
+        public DateTimeImmutable $timestamp,
+    ) {
+    }
+
     public function __invoke(
         Closure $assertion,
         int $__special,

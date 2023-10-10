@@ -80,8 +80,11 @@ final class InvokerTest extends TestCase
             $default,
             ...$variadic,
         ), $resolver];
-        yield 'class instance with __invoke method' => [new ClassWithInvokeMethod(), $resolver];
+        yield 'class instance with __invoke method' => [new ClassWithInvokeMethod(new DateTimeImmutable()), $resolver];
+        yield 'non-instantiated class with __invoke method' => [ClassWithInvokeMethod::class, $resolver];
         yield 'class instance with public method' => [[new ClassWithPublicMethod(), 'bar'], $resolver];
+        yield 'non-instantiated class with public method' => [[ClassWithPublicMethod::class, 'bar'], $resolver];
+        yield 'non-instantiated class with public method (alternative notation)' => [ClassWithPublicMethod::class . '::bar', $resolver];
         yield 'class with static method' => [[ClassWithStaticMethod::class, 'foo'], $resolver];
         yield 'class with static method (alternative notation)' => [ClassWithStaticMethod::class . '::foo', $resolver];
     }
